@@ -1,0 +1,69 @@
+spring:
+  application:
+    name: movielist
+  datasource:
+    url: jdbc:h2:file:./data/movielist;AUTO_SERVER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      # Study-project simplification: a real production app would manage schema changes with
+      # Flyway/Liquibase migrations instead of letting Hibernate auto-update the schema.
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+  h2:
+    console:
+      enabled: false
+
+server:
+  port: 8080
+
+# Fail-fast secrets: no defaults on purpose. If JWT_SECRET or OMDB_API_KEY are unset,
+# Spring's relaxed binding leaves these null and MovielistApplication checks them at
+# startup (see ApplicationReadyEvent / @PostConstruct in config) rather than letting
+# the app boot into a silently-broken state.
+movielist:
+  jwt:
+    secret: ${JWT_SECRET:}
+    access-token-ttl-seconds: 900
+    refresh-token-ttl-seconds: 604800
+
+omdb:
+  api:
+    key: ${OMDB_API_KEY:}
+    base-url: https://www.omdbapi.com/
+
+logging:
+  level:
+    com.example.movielist: INFO
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+  datasource:
+    url: jdbc:h2:mem:movielist-test;DB_CLOSE_DELAY=-1
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+movielist:
+  jwt:
+    secret: test-only-secret-key-not-for-production-use-0123456789
+omdb:
+  api:
+    key: test-key
