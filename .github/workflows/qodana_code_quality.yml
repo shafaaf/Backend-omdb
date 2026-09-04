@@ -1,0 +1,84 @@
+#===============================================================================#
+#            GITHUB ACTIONS WORKFLOW: Qodana Code Quality Analysis            #
+#                                                                               #
+# This workflow runs Qodana, a JetBrains static code analysis tool that       #
+# scans Java code for bugs, code smells, and best practice violations.        #
+# Docs: https://www.jetbrains.com/help/qodana/about-qodana.html              #
+#===============================================================================#
+
+# WORKFLOW METADATA
+# Name shown in GitHub Actions tab
+name: Qodana
+
+# TRIGGER EVENTS: When does this workflow run?
+on:
+  # Manual trigger: allows you to run it anytime from Actions tab
+  workflow_dispatch:
+
+  # Runs on every pull request (opened, updated, reopened)
+  pull_request:
+
+  # Runs on every push to these branches
+  push:
+    branches:
+      - main  # Only scan pushes to main branch
+
+# JOBS: The actual work
+jobs:
+  qodana:
+    # Environment: Run on Ubuntu (GitHub-hosted runner)
+    runs-on: ubuntu-latest
+
+    # PERMISSIONS: What this workflow is allowed to do in your repo
+    # These need to be explicit for security reasons
+    permissions:
+      contents: write        # Can write to repo (if pushing fixes)
+      pull-requests: write   # Can comment on PRs
+      checks: write          # Can create check runs (pass/fail status)
+
+    # STEPS: Sequential tasks in this job
+    steps:
+      # Step 1: Clone the repository
+      # This fetches your code so Qodana can analyze it
+      - uses: actions/checkout@v4
+        with:
+          # For PRs: analyze the PR's head commit (the proposed changes)
+          # For pushes: analyze the pushed commit
+          ref: ${{ github.event.pull_request.head.sha }}
+          # fetch-depth: 0 = fetch full git history (needed for some analyses)
+          fetch-depth: 0
+
+      # Step 2: Run Qodana scan
+      # This is the actual code quality check
+      - name: 'Qodana Scan'
+        uses: JetBrains/qodana-action@v2026.2
+        env:
+          # Authentication token for Qodana service
+          # Stored securely in GitHub repo settings > Secrets
+          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
+
+        with:
+          # pr-mode: false = analyze entire codebase, not just changed files
+          # Set to true if you only want to check new/changed code in PRs
+          pr-mode: false
+
+          # use-caches: true = reuse previous scan results for speed
+          # Speeds up subsequent runs by not re-analyzing unchanged files
+          use-caches: true
+
+          # post-pr-comment: true = add a comment on the PR with results
+          # Shows scan summary directly in the PR discussion
+          post-pr-comment: true
+
+          # use-annotations: true = add inline annotations on changed lines
+          # Marks problematic lines with yellow/red warnings in PR diff view
+          use-annotations: true
+
+          # upload-result: false = don't save scan artifacts as job artifacts
+          # Set to true if you want to download detailed JSON/HTML reports
+          upload-result: false
+
+          # push-fixes: 'none' = don't auto-commit fixes
+          # Only available in premium Qodana plans
+          # Set to 'all' or 'unstable' to have Qodana push fixes automatically
+          push-fixes: 'none'

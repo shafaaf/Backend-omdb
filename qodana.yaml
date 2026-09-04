@@ -1,0 +1,124 @@
+#===============================================================================#
+#              QODANA CONFIGURATION FILE (qodana.yaml)                         #
+#                                                                               #
+# This file configures HOW Qodana scans your code. It works alongside the     #
+# GitHub Actions workflow to define analysis rules, JDK version, profiles, etc.#
+# Docs: https://www.jetbrains.com/help/qodana/qodana-yaml.html                #
+#===============================================================================#
+
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!#
+# SECURITY WARNING: Do NOT store secrets (API keys, tokens, passwords) here.   #
+# This file's contents are included in Qodana reports, which may be shared.    #
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!#
+
+# CONFIG VERSION
+# Specifies which qodana.yaml format version you're using
+# "1.0" is the current stable version
+version: "1.0"
+
+#===============================================================================#
+# ANALYSIS PROFILE: Which checks to run?
+#===============================================================================#
+# An inspection profile is a preset collection of code quality rules
+# Qodana provides several built-in profiles:
+#   - qodana.starter     = basic checks, safe for beginners (default, currently used)
+#   - qodana.recommended = more thorough, still safe
+#   - qodana.strict      = comprehensive, catches more issues (may have false positives)
+#   - Custom: point to your own .xml profile file
+profile:
+  name: qodana.starter
+
+#===============================================================================#
+# FINE-TUNING INSPECTIONS (optional)
+#===============================================================================#
+# You can ENABLE or DISABLE specific inspection rules
+# Examples below (currently commented out - using profile defaults)
+
+# INCLUDE: Turn ON specific inspections
+# include:
+#   - name: UnnecessaryLocalVariable  # Check for unused local variables
+#   - name: UnusedImport              # Check for unused imports
+#   - name: MagicNumber               # Flag hardcoded numbers (should be constants)
+
+# EXCLUDE: Turn OFF specific inspections (useful to suppress known false positives)
+# exclude:
+#   - name: LongLine                  # Don't warn about long lines
+#     paths:
+#       - src/main/java/com/example/movielist/client/* # Except in specific paths
+#   - name: ParameterNamingConvention
+#     paths:
+#       - src/test/*
+
+#===============================================================================#
+# PROJECT JDK VERSION
+#===============================================================================#
+# Which Java version should Qodana assume when analyzing?
+# This affects which language features it recognizes and accepts
+# Your pom.xml specifies Java 21, so we tell Qodana to use the same
+projectJDK: "21"  # (Applies in CI/CD pipeline)
+
+#===============================================================================#
+# BOOTSTRAP SCRIPT (optional)
+#===============================================================================#
+# Run a shell command BEFORE Qodana analysis
+# Useful for: installing dependencies, generating code, downloading configs
+# Currently disabled - uncomment if needed
+# bootstrap: sh ./prepare-qodana.sh
+
+#===============================================================================#
+# JETBRAINS IDE PLUGINS (optional)
+#===============================================================================#
+# Install extra Qodana inspection plugins before analysis
+# Plugin IDs can be found at https://plugins.jetbrains.com
+# Currently disabled - uncomment to add plugins
+# plugins:
+#   - id: com.intellij.spring              # Spring Framework inspection plugin
+#   - id: com.intellij.microservices.docker # Docker support
+
+#===============================================================================#
+# QUALITY GATE: Fail the CI/CD if standards aren't met
+#===============================================================================#
+# Define hard thresholds that will FAIL the build if exceeded
+# Currently disabled - uncomment to enforce quality standards
+#
+# Two types of conditions:
+# 1. severityThresholds: Max allowed issues by severity level
+#    - critical: Most serious bugs, high-priority fixes
+#    - high:     Significant issues, should fix soon
+#    - medium:   Moderate issues, quality improvements
+#    - low:      Minor issues
+#    - any:      Total issues of any severity
+#
+# 2. testCoverageThresholds: Minimum code coverage requirements
+#    - fresh:    Min coverage on newly added code (%)
+#    - total:    Min coverage on whole project (%)
+#    (Only available in Premium Qodana plans)
+#
+# Example: This would FAIL the build if there are >5 critical issues
+#          or coverage drops below 50% on the whole project
+# failureConditions:
+#   severityThresholds:
+#     any: 15           # Max 15 issues total
+#     critical: 5       # Max 5 critical issues (fail if exceeded)
+#     high: 10          # Max 10 high-severity issues
+#   testCoverageThresholds:
+#     fresh: 70         # New code must have 70% coverage
+#     total: 50         # Whole project must have 50% coverage
+
+#===============================================================================#
+# LANGUAGE & TOOL SELECTION
+#===============================================================================#
+# Qodana supports MANY languages via different "linters" (analyzers)
+# Available languages:
+#   - jetbrains/qodana-jvm-community     = Java (what we use)
+#   - jetbrains/qodana-jvm-ultimate      = Java (with extra features)
+#   - jetbrains/qodana-python            = Python
+#   - jetbrains/qodana-js                = JavaScript/TypeScript
+#   - jetbrains/qodana-go                = Go
+#   - jetbrains/qodana-php               = PHP
+#   - jetbrains/qodana-dotnet            = C# / .NET
+#   See: https://www.jetbrains.com/help/qodana/linters.html
+#
+# Format: jetbrains/qodana-[language]:[version-number]
+# Version 2026.2 = current stable Qodana version
+linter: jetbrains/qodana-jvm-community:2026.2

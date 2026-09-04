@@ -1,45 +1,92 @@
+#===============================================================================#
+#           GITHUB ACTIONS WORKFLOW: Claude Automatic Code Review             #
+#                                                                               #
+# This workflow uses Claude AI to automatically review every pull request     #
+# for bugs, code quality issues, and best practices. Claude posts inline      #
+# comments on the changed code within the PR.                                  #
+#===============================================================================#
+
+# WORKFLOW METADATA
+# Display name in GitHub Actions tab
 name: Claude Code Review
 
+# TRIGGER EVENTS: When does this workflow run?
 on:
   pull_request:
+    # Types of PR events that trigger this workflow:
+    # - opened:          new PR created
+    # - synchronize:     new commits pushed to the PR branch
+    # - ready_for_review: PR marked as ready (after draft)
+    # - reopened:        closed PR reopened
     types: [opened, synchronize, ready_for_review, reopened]
-    # Optional: Only run on specific file changes
-    # paths:
-    #   - "src/**/*.ts"
-    #   - "src/**/*.tsx"
-    #   - "src/**/*.js"
-    #   - "src/**/*.jsx"
 
+    # OPTIONAL: Only run on specific file changes
+    # Uncomment to skip review if only certain files changed (e.g., only if JS/TS changed)
+    # paths:
+    #   - "src/**/*.ts"    # TypeScript files
+    #   - "src/**/*.tsx"   # React TypeScript
+    #   - "src/**/*.js"    # JavaScript
+    #   - "src/**/*.jsx"   # React JavaScript
+
+# JOBS: The actual work
 jobs:
   claude-review:
-    # Optional: Filter by PR author
+    # OPTIONAL: Filter by PR author
+    # Uncomment to run review only for certain contributors
+    # Useful for: skipping reviews for trusted maintainers, focusing on new contributors
     # if: |
     #   github.event.pull_request.user.login == 'external-contributor' ||
     #   github.event.pull_request.user.login == 'new-developer' ||
     #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
 
+    # Environment: Run on GitHub-hosted Ubuntu runner
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: read
-      issues: read
-      id-token: write
 
+    # PERMISSIONS: What this workflow is allowed to do
+    permissions:
+      contents: read         # Can read the repo code
+      pull-requests: read    # Can read PR details
+      issues: read           # Can read issues
+      id-token: write        # Can authenticate with GitHub's token (needed for OAuth flow)
+
+    # STEPS: Sequential tasks
     steps:
+      # Step 1: Clone the repository
+      # fetch-depth: 1 = only download the latest commit (faster than full history)
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
+      # Step 2: Run Claude AI code review
+      # This uses the official Anthropic Claude Code action
       - name: Run Claude Code Review
-        id: claude-review
+        id: claude-review  # Step ID for reference in later steps
         uses: anthropics/claude-code-action@v1
         with:
+          # OAuth token for Claude Code authentication
+          # Generated in GitHub repo settings > Secrets
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
+          # Where to find Claude Code plugins (extensions that add functionality)
           plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
+
+          # Which plugins to load
+          # 'code-review@claude-code-plugins' = the built-in code review plugin
           plugins: 'code-review@claude-code-plugins'
+
+          # The command Claude will execute
+          # '/code-review:code-review' = run code review skill
+          # '--comment' = post inline comments on the PR
+          # Remaining: GitHub repo and PR number (auto-filled from workflow context)
           prompt: '/code-review:code-review --comment ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
+
+          # Extra CLI arguments to configure Claude behavior
+          # '--allowedTools ...' = restrict which tools Claude can use
+          # 'mcp__github_inline_comment__create_inline_comment' = only allow posting comments
           claude_args: '--allowedTools "mcp__github_inline_comment__create_inline_comment"'
-          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
-          # or https://code.claude.com/docs/en/cli-reference for available options
+
+          # For more options:
+          # https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
+          # https://code.claude.com/docs/en/cli-reference
 

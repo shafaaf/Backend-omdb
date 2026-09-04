@@ -1,50 +1,99 @@
+#===============================================================================#
+#              GITHUB ACTIONS WORKFLOW: Claude Interactive Assistant          #
+#                                                                               #
+# This workflow makes Claude respond when you @mention them in GitHub:        #
+# - Comments on issues or pull requests                                        #
+# - Pull request reviews                                                       #
+# Claude will read the context and respond to your request.                    #
+#===============================================================================#
+
+# WORKFLOW METADATA
+# Display name in GitHub Actions tab
 name: Claude Code
 
+# TRIGGER EVENTS: When does this workflow run?
 on:
+  # Trigger 1: Comment on an issue
   issue_comment:
-    types: [created]
-  pull_request_review_comment:
-    types: [created]
-  issues:
-    types: [opened, assigned]
-  pull_request_review:
-    types: [submitted]
+    types: [created]  # When a new comment is posted to an issue
 
+  # Trigger 2: Comment on a PR review
+  pull_request_review_comment:
+    types: [created]  # When a new comment is posted on a PR review
+
+  # Trigger 3: Issue creation or assignment
+  issues:
+    types: [opened, assigned]  # When issue is opened OR assigned to someone
+
+  # Trigger 4: PR review submission
+  pull_request_review:
+    types: [submitted]  # When someone submits a PR review
+
+# JOBS: The actual work
 jobs:
   claude:
+    # CONDITIONAL: Only run if someone mentions @claude
+    # This prevents Claude from running on EVERY comment/issue/review
+    # The logic checks if '@claude' appears in the relevant field based on event type
     if: |
+      # Case 1: Issue comment (e.g., "@claude fix this")
       (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+
+      # Case 2: PR review comment (e.g., "@claude why did they do this?")
       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+
+      # Case 3: PR review body (e.g., review message that mentions "@claude")
       (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
+
+      # Case 4: Issue title or body (e.g., "@claude help debug" in title or description)
       (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+
+    # Environment: Run on GitHub-hosted Ubuntu runner
     runs-on: ubuntu-latest
+
+    # PERMISSIONS: What this workflow is allowed to do
     permissions:
-      contents: read
-      pull-requests: read
-      issues: read
-      id-token: write
-      actions: read # Required for Claude to read CI results on PRs
+      contents: read         # Can read the repo code
+      pull-requests: read    # Can read PR details
+      issues: read           # Can read issue details
+      id-token: write        # Can authenticate with GitHub's token
+      actions: read          # Can read CI/CD workflow results (needed to display test failures, build status)
+
+    # STEPS: Sequential tasks
     steps:
+      # Step 1: Clone the repository
+      # fetch-depth: 1 = only download the latest commit (fast and sufficient)
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
+      # Step 2: Run Claude to respond to the @mention
+      # Claude reads the context and replies based on your comment
       - name: Run Claude Code
-        id: claude
+        id: claude  # Step ID for reference in later steps
         uses: anthropics/claude-code-action@v1
         with:
+          # OAuth token for Claude Code authentication
+          # Generated in GitHub repo settings > Secrets
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
-          # This is an optional setting that allows Claude to read CI results on PRs
+          # OPTIONAL: Grant Claude extra permissions
+          # 'actions: read' allows Claude to see CI/CD results (test failures, build logs)
+          # Useful for: debugging failed tests, analyzing build errors
           additional_permissions: |
             actions: read
 
-          # Optional: Give a custom prompt to Claude. If this is not specified, Claude will perform the instructions specified in the comment that tagged it.
+          # OPTIONAL: Custom prompt/instruction
+          # If NOT set: Claude uses the instructions from your @mention comment
+          # If SET: Claude uses this prompt instead (ignores your comment)
+          # Example: Force Claude to always summarize PRs
           # prompt: 'Update the pull request description to include a summary of changes.'
 
-          # Optional: Add claude_args to customize behavior and configuration
-          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
-          # or https://code.claude.com/docs/en/cli-reference for available options
+          # OPTIONAL: Extra CLI arguments for Claude
+          # Examples:
+          #   '--allowed-tools Bash(gh pr *)'  = only allow running certain gh commands
+          #   '--model claude-opus'             = use a specific Claude model
+          # For all options: https://code.claude.com/docs/en/cli-reference
           # claude_args: '--allowed-tools Bash(gh pr *)'
 
