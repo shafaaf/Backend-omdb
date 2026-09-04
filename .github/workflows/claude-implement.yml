@@ -1,0 +1,98 @@
+#===============================================================================#
+#         GITHUB ACTIONS WORKFLOW: Claude Implementation Stage                 #
+#                                                                               #
+# Triggered when you comment "@claude implement" on an issue with a plan.      #
+# Claude builds the implementation on a branch, runs tests, boots the app,     #
+# captures screenshots, and opens a PR. Does NOT merge.                        #
+#===============================================================================#
+
+name: Claude Implement
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  implement:
+    # Only trigger if:
+    # 1. Sender is repo owner
+    # 2. Comment says "@claude implement"
+    # 3. Issue has been planned (has label)
+    if: |
+      github.event.sender.login == github.repository_owner &&
+      contains(github.event.comment.body, '@claude implement') &&
+      contains(github.event.issue.labels.*.name, 'claude:plan-ready') &&
+      !github.event.issue.pull_request
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install frontend dependencies
+        run: cd frontend && npm ci
+
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Claude - Implementation Stage
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
+          track_progress: true
+
+          prompt: |
+            You are in IMPLEMENTATION MODE. Execute the plan from issue #${{ github.event.issue.number }}.
+
+            You MUST:
+            1. Create a new branch: git checkout -b issue-${{ github.event.issue.number }}-impl
+            2. Implement the changes outlined in the plan
+            3. Run backend tests: ./mvnw test
+            4. Run frontend tests: cd frontend && npx vitest run && npm run lint
+            5. Boot the application servers in background (provide JWT_SECRET and OMDB_API_KEY via env)
+            6. Use Playwright to screenshot the relevant UI (save to .github/pr-previews/${{ github.event.issue.number }}/)
+            7. Stop the servers
+            8. Push the branch
+            9. Open a PR using: gh pr create --title "Implement #${{ github.event.issue.number }}" --body "Closes #${{ github.event.issue.number }}\n\n## Screenshots\n$(cat .github/pr-previews/${{ github.event.issue.number }}/screenshots.md || echo 'See screenshots in files below')"
+
+            NEVER merge the PR. Leave that for manual review and the @claude merge command.
+
+            If tests fail, explain why and suggest fixes, but do NOT skip the PR creation.
+
+          claude_args: |
+            --allowedTools "Bash"
+            --allowedTools "Read"
+            --allowedTools "Edit"
+            --allowedTools "Write"
+            --disallowedTools "Bash(gh pr merge*)"
+            --disallowedTools "Bash(git push*main)"
+
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          OMDB_API_KEY: ${{ secrets.OMDB_API_KEY }}
+
+      - name: Update label
+        if: success()
+        run: |
+          gh issue edit ${{ github.event.issue.number }} --remove-label claude:plan-ready --add-label claude:pr-created
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
