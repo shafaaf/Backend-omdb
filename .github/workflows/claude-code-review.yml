@@ -82,9 +82,9 @@ jobs:
           prompt: '/code-review:code-review --comment ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
 
           # Extra CLI arguments to configure Claude behavior
-          # '--allowedTools ...' = restrict which tools Claude can use
-          # 'mcp__github_inline_comment__create_inline_comment' = only allow posting comments
-          claude_args: '--allowedTools "mcp__github_inline_comment__create_inline_comment"'
+          # '--allowedTools ...' = tools Claude can use during code review
+          # Includes: GitHub commenting, npm for verification, and read/write tools
+          claude_args: '--allowedTools "mcp__github_inline_comment__create_inline_comment" --allowedTools "Bash(npm run lint)" --allowedTools "Bash(npx vitest run)" --allowedTools "Read" --allowedTools "Bash(git *)"'
 
           # For more options:
           # https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
