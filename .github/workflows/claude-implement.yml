@@ -1,9 +1,55 @@
 #===============================================================================#
 #         GITHUB ACTIONS WORKFLOW: Claude Implementation Stage                 #
-#                                                                               #
-# Triggered when you comment "@claude implement" on an issue with a plan.      #
-# Claude builds the implementation on a branch, runs tests, boots the app,     #
-# captures screenshots, and opens a PR. Does NOT merge.                        #
+#===============================================================================#
+#
+# PURPOSE:
+#   Claude executes the plan from the previous stage. It builds the code,
+#   runs tests, boots the app, captures UI screenshots, and opens a PR.
+#   DOES NOT MERGE (you stay in control of that).
+#
+# HOW IT WORKS:
+#   1. You comment "@claude implement" on an issue with a plan
+#   2. This workflow triggers (only if issue has "claude:plan-ready" label)
+#   3. Pre-setup installs Java, Node, frontend dependencies, Playwright
+#   4. Claude gets the plan from the issue and implements it
+#   5. Claude runs tests (backend + frontend)
+#   6. Claude boots the backend + frontend dev servers (using JWT_SECRET, OMDB_API_KEY)
+#   7. Claude uses Playwright to take screenshots of affected UI
+#   8. Claude stops servers, pushes branch, opens PR with screenshots
+#   9. PR stays open for your review (Claude explicitly does NOT merge)
+#
+# SAFETY FEATURES:
+#   - Requires "claude:plan-ready" label (gates: only after plan approved)
+#   - Owner-only trigger: no random people can approve implementation
+#   - Explicit merge blockers: --disallowedTools "Bash(gh pr merge*)"
+#     Even though Claude gets full Bash access, we explicitly prevent merge commands
+#   - Full tests run: backend + frontend (via tests.yml as independent CI)
+#   - Screenshots embedded in PR so you see the UI changes before approving merge
+#
+# SETUP STEPS (run before Claude starts):
+#   - Java 21 (Temurin) for backend
+#   - Node 20 for frontend
+#   - npm ci (clean install of frontend dependencies)
+#   - Playwright + chromium (for taking screenshots)
+#
+# REQUIRED SECRETS:
+#   - CLAUDE_CODE_OAUTH_TOKEN (GitHub secret, already set)
+#   - JWT_SECRET (needed to boot backend; get from your .env)
+#   - OMDB_API_KEY (needed to boot backend; get from your .env)
+#
+# TRIGGER CONDITIONS (all must be true):
+#   - github.event.sender.login == github.repository_owner (only you)
+#   - Comment contains "@claude implement"
+#   - Issue has label "claude:plan-ready" (proof plan was posted)
+#   - Comment is on an issue, not a PR
+#
+# OUTPUT:
+#   - New branch: issue-<number>-impl
+#   - PR linked to issue with title "Implement #<number>"
+#   - Screenshots of affected UI in PR body
+#   - Test results visible in PR (backend-tests + frontend-tests jobs)
+#   - Issue labeled changed from "claude:plan-ready" to "claude:pr-created"
+#
 #===============================================================================#
 
 name: Claude Implement

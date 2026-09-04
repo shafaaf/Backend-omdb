@@ -1,9 +1,36 @@
 #===============================================================================#
 #         GITHUB ACTIONS WORKFLOW: Claude Planning Stage                       #
-#                                                                               #
-# Triggered when @claude is mentioned on a NEW issue (or fresh comment on      #
-# an issue). Claude analyzes the request and posts a PLAN ONLY, with no code   #
-# changes. Only the repo owner can trigger this.                               #
+#===============================================================================#
+#
+# PURPOSE:
+#   Claude analyzes a GitHub issue and posts a detailed implementation plan
+#   WITHOUT making any code changes. This is the first step in the workflow.
+#
+# HOW IT WORKS:
+#   1. You create an issue or comment "@claude" on an issue
+#   2. This workflow triggers (only if you're the repo owner)
+#   3. Claude explores your codebase in READ-ONLY mode
+#   4. Claude posts a structured plan as an issue comment
+#   5. Issue gets labeled with "claude:plan-ready"
+#   6. You review the plan
+#   7. You comment "@claude implement" to proceed (triggers claude-implement.yml)
+#
+# SAFETY FEATURES:
+#   - Owner-only trigger: prevents unauthorized Claude API spending
+#   - Read-only tools: no Edit, Write, or Bash allowed (can only Read/Glob/Grep)
+#   - Double gate: GitHub permissions AND Claude tool restrictions
+#   - State tracking: labels prevent re-running if plan already done
+#
+# TRIGGER CONDITIONS (all must be true):
+#   - github.event.sender.login == github.repository_owner (only you)
+#   - Either: new issue with @claude in body
+#            OR: comment with @claude on an issue without "claude:plan-ready" label
+#
+# OUTPUT:
+#   - Issue comment with structured plan
+#   - Issue labeled "claude:plan-ready"
+#   - Ready for your approval via "@claude implement" comment
+#
 #===============================================================================#
 
 name: Claude Plan

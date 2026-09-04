@@ -1,9 +1,51 @@
 #===============================================================================#
 #           GITHUB ACTIONS WORKFLOW: Manual Merge Gate (Non-LLM)               #
-#                                                                               #
-# Triggered when you comment "@claude merge" on a PR. A plain (non-LLM)       #
-# Actions step merges the PR only if YOU gave the exact command.              #
-# Prevents accidental merges and keeps merge authority human-controlled.      #
+#===============================================================================#
+#
+# PURPOSE:
+#   A human-controlled merge gate. When you comment "@claude merge" on a PR,
+#   this workflow merges it. Claude NEVER triggers this on its own.
+#   This is deliberately NOT an LLM decision — it's a deterministic action
+#   triggered only by your exact command as the repo owner.
+#
+# HOW IT WORKS:
+#   1. You review a PR (from Claude or anyone)
+#   2. You check that tests pass ✅, code looks good ✅, CI is green ✅
+#   3. You comment "@claude merge" on the PR
+#   4. This workflow triggers (plain Actions, no Claude involved)
+#   5. Merges the PR with:
+#      - --squash: combines all commits into one clean commit on main
+#      - --delete-branch: removes the feature branch after merge
+#      - --auto: if CI is still running, waits for it to finish then merges
+#   6. GitHub marks the PR as merged, branch is deleted
+#
+# SAFETY FEATURES:
+#   - Owner-only trigger: only you can approve merges
+#   - Exact phrase: must say "@claude merge" (no typos accepted)
+#   - Plain Actions step: NO Claude/LLM involved in merge decision
+#   - Requires PR to exist: can't merge an issue by accident
+#   - Atomic: either merges cleanly or fails (no half-merged state)
+#
+# WHY NOT LLM-CONTROLLED:
+#   Merging is the most critical operation. We want:
+#   - 100% human approval (you see the code, you make the decision)
+#   - No ambiguity: exact phrase, not "looks good" or "ship it"
+#   - Reversibility: if something goes wrong, blame the person who approved
+#   - No AI decision-making on code integration into main
+#
+# TRIGGER CONDITIONS (all must be true):
+#   - github.event.sender.login == github.repository_owner (only you)
+#   - Comment is on a PR (github.event.issue.pull_request exists)
+#   - Comment contains exact phrase "@claude merge"
+#
+# OUTPUT:
+#   - PR merged to main with squashed commits
+#   - Feature branch deleted
+#   - PR marked as merged on GitHub
+#   - Issue (if linked with "Closes #X") auto-closes
+#
+# NOTE: This is the ONLY place where code merges to main via Claude automation.
+#
 #===============================================================================#
 
 name: Claude Merge
