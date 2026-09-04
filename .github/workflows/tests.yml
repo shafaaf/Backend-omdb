@@ -1,9 +1,43 @@
 #===============================================================================#
 #              GITHUB ACTIONS WORKFLOW: Independent Test Suite CI              #
-#                                                                               #
-# Triggered on every PR (opened, pushed, reopened). Runs backend and frontend  #
-# tests independently so "tests pass" is a verifiable GitHub status check,     #
-# not just Claude's claim. Works for PRs from Claude OR humans.                #
+#===============================================================================#
+#
+# PURPOSE:
+#   Run backend + frontend tests on EVERY PR as independent CI checks.
+#   "Tests pass" becomes a real GitHub status check, not just Claude's word.
+#   Works for PRs from Claude AND from human developers.
+#
+# WHY IT'S IMPORTANT:
+#   Without this, only Claude knows if tests pass (from its own run transcript).
+#   With this workflow, GitHub shows a verifiable status: ✅ backend-tests, ✅ frontend-tests
+#   This means:
+#   - You can require these checks to pass before merging (branch protection)
+#   - Independent verification: tests run outside Claude's session
+#   - Applies to ALL PRs, not just Claude-generated ones
+#
+# WHAT IT TESTS:
+#   Backend tests:
+#     - ./mvnw test (all JUnit5 tests, Mockito mocks, Spring integration tests)
+#   Frontend tests:
+#     - npx vitest run (unit tests with React Testing Library)
+#     - npm run lint (code style checks via oxlint)
+#
+# JOBS (run in parallel):
+#   1. backend-tests: Setup Java 21, run Maven tests
+#   2. frontend-tests: Setup Node 20, npm ci, run Vitest and linting
+#
+# TRIGGER CONDITIONS:
+#   - Any PR opened, updated (new commits), or reopened
+#   - Runs on ubuntu-latest (standard GitHub runner)
+#
+# OUTPUT:
+#   - Two GitHub status checks visible on the PR:
+#     ✅ Tests / backend-tests
+#     ✅ Tests / frontend-tests
+#   - Each shows pass/fail (green checkmark or red X)
+#
+# NOTE: This workflow has NO permissions to merge PRs. It only reports test status.
+#
 #===============================================================================#
 
 name: Tests
