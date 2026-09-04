@@ -24,6 +24,7 @@ describe('MovieCard', () => {
     title: 'The Shawshank Redemption',
     releaseYear: 1994,
     posterUrl: 'http://example.com/poster.jpg',
+    imdbRating: '9.3',
   };
 
   const mockLists = [
@@ -163,6 +164,41 @@ describe('MovieCard', () => {
     await waitFor(() => {
       const yearElement = container.querySelector('.movie-card-year');
       expect(yearElement).not.toBeInTheDocument();
+    });
+  });
+
+  it('should display IMDb rating when available', async () => {
+    mockApiRequest.mockResolvedValueOnce(null);
+
+    render(
+      <BrowserRouter>
+        <AuthProvider>
+          <MovieCard movie={mockMovie} lists={mockLists} />
+        </AuthProvider>
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('⭐ 9.3')).toBeInTheDocument();
+    });
+  });
+
+  it('should not display a rating element when imdbRating is null', async () => {
+    mockApiRequest.mockResolvedValueOnce(null);
+
+    const movieWithoutRating = { ...mockMovie, imdbRating: null };
+
+    const { container } = render(
+      <BrowserRouter>
+        <AuthProvider>
+          <MovieCard movie={movieWithoutRating} lists={mockLists} />
+        </AuthProvider>
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      const ratingElement = container.querySelector('.movie-card-rating');
+      expect(ratingElement).not.toBeInTheDocument();
     });
   });
 });

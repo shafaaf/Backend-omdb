@@ -37,6 +37,7 @@ export interface MovieSearchResultResponse {
   title: string;
   releaseYear: number | null;
   posterUrl: string | null;
+  imdbRating: string | null;
 }
 
 export interface FavoriteListItemResponse {

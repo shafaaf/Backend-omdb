@@ -51,25 +51,52 @@ class MovieServiceImplTest {
 
 	/**
 	 * Verifies that search delegates to the OMDb client and maps results to
-	 * MovieSearchResultResponse DTOs without touching the database.
+	 * MovieSearchResultResponse DTOs, leaving imdbRating null for a title that
+	 * isn't already cached locally (OMDb's search endpoint carries no rating).
 	 */
 	@Test
-	void search_validTitle_returnsMappedSearchResults() {
-		// Arrange: mock the OMDb client to return two search results
+	void search_validTitle_returnsMappedSearchResultsWithoutCachedRating() {
+		// Arrange: mock the OMDb client to return two search results, neither cached locally
 		OmdbSearchItem item1 = new OmdbSearchItem(IMDB_ID, TITLE, "1994", "http://poster1.jpg");
 		OmdbSearchItem item2 = new OmdbSearchItem("tt0068646", "The Godfather", "1972", "http://poster2.jpg");
 		when(omdbClient.search("Shawshank")).thenReturn(List.of(item1, item2));
+		when(movieRepository.findByExternalId(anyString())).thenReturn(Optional.empty());
 
 		// Act
 		List<MovieSearchResultResponse> results = service.search("Shawshank");
 
-		// Assert: results are mapped correctly
+		// Assert: results are mapped correctly, with no rating available
 		assertThat(results).hasSize(2);
 		assertThat(results.get(0).externalId()).isEqualTo(IMDB_ID);
 		assertThat(results.get(0).title()).isEqualTo(TITLE);
 		assertThat(results.get(0).releaseYear()).isEqualTo(1994);
+		assertThat(results.get(0).imdbRating()).isNull();
 		assertThat(results.get(1).externalId()).isEqualTo("tt0068646");
-		verify(movieRepository, never()).findByExternalId(anyString());
+	}
+
+	/**
+	 * Verifies that search enriches a result with its cached imdbRating when the
+	 * movie was already fetched-and-cached via a prior full-detail lookup.
+	 */
+	@Test
+	void search_titleAlreadyCached_enrichesResultWithCachedRating() {
+		// Arrange: OMDb search returns one item that's already cached locally with a rating
+		OmdbSearchItem item = new OmdbSearchItem(IMDB_ID, TITLE, "1994", "http://poster1.jpg");
+		when(omdbClient.search("Shawshank")).thenReturn(List.of(item));
+
+		Movie cached = Movie.builder()
+				.externalId(IMDB_ID)
+				.title(TITLE)
+				.imdbRating("9.3")
+				.build();
+		when(movieRepository.findByExternalId(IMDB_ID)).thenReturn(Optional.of(cached));
+
+		// Act
+		List<MovieSearchResultResponse> results = service.search("Shawshank");
+
+		// Assert: the cached rating is attached without any extra OMDb call
+		assertThat(results).hasSize(1);
+		assertThat(results.get(0).imdbRating()).isEqualTo("9.3");
 	}
 
 	/**

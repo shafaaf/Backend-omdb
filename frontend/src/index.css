@@ -234,10 +234,23 @@ select {
   font-size: 1rem;
 }
 
+.movie-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
 .movie-card-year {
   margin: 0;
   color: var(--text-muted);
   font-size: 0.85rem;
+}
+
+.movie-card-rating {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
 .movie-card-login-hint {

@@ -31,7 +31,14 @@ export function MovieCard({ movie, lists }: Props) {
             {movie.title}
           </Link>
         </h3>
-        {movie.releaseYear && <p className="movie-card-year">{movie.releaseYear}</p>}
+        <div className="movie-card-meta">
+          {movie.releaseYear && <p className="movie-card-year">{movie.releaseYear}</p>}
+          {movie.imdbRating && (
+            <p className="movie-card-rating" title="IMDb rating">
+              ⭐ {movie.imdbRating}
+            </p>
+          )}
+        </div>
         {user ? (
           <AddToListButton imdbId={movie.externalId} lists={lists} />
         ) : (

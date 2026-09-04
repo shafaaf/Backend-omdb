@@ -44,10 +44,15 @@ public final class MovieMapper {
 				.build();
 	}
 
-	/** Converts one OMDb search result item to the lightweight search-result DTO. */
-	public static MovieSearchResultResponse toSearchResult(OmdbSearchItem item) {
+	/**
+	 * Converts one OMDb search result item to the lightweight search-result DTO.
+	 * {@code cachedImdbRating} comes from a local cache lookup (OMDb search
+	 * results themselves carry no rating) and is passed through as-is, null or not.
+	 */
+	public static MovieSearchResultResponse toSearchResult(OmdbSearchItem item, String cachedImdbRating) {
 		return new MovieSearchResultResponse(
-				item.imdbId(), item.title(), parseYear(item.year()), nullIfNotAvailable(item.poster()));
+				item.imdbId(), item.title(), parseYear(item.year()), nullIfNotAvailable(item.poster()),
+				cachedImdbRating);
 	}
 
 	/** OMDb years can be ranges for series ("2015–2019") — the start year is good enough here. */

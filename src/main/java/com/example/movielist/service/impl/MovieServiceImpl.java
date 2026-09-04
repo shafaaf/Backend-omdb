@@ -37,8 +37,14 @@ public class MovieServiceImpl implements MovieService {
 	@Transactional(readOnly = true)
 	public List<MovieSearchResultResponse> search(String title) {
 		return omdbClient.search(title).stream()
-				.map(MovieMapper::toSearchResult)
+				.map(item -> MovieMapper.toSearchResult(item, cachedImdbRating(item.imdbId())))
 				.toList();
+	}
+
+	/** Looks up a search result's rating from the local cache, if we've already fetched its
+	 *  full detail before; returns null on a cache miss rather than calling OMDb again. */
+	private String cachedImdbRating(String externalId) {
+		return movieRepository.findByExternalId(externalId).map(Movie::getImdbRating).orElse(null);
 	}
 
 	@Override
