@@ -159,7 +159,7 @@ cd frontend && npx vitest run   # frontend: a couple of light unit tests
 
 ## Useful commands
 
-**Backend** (run from `backend-practise/`):
+**Backend** (run from the repo root):
 
 | Command | What it does |
 |---|---|
@@ -173,7 +173,7 @@ cd frontend && npx vitest run   # frontend: a couple of light unit tests
 | `./mvnw dependency:tree` | Inspect the resolved dependency graph |
 | `rm -rf data/` | Wipe the local H2 database (fresh state next boot) |
 
-**Frontend** (run from `backend-practise/frontend/`):
+**Frontend** (run from `frontend/`):
 
 | Command | What it does |
 |---|---|
@@ -218,17 +218,16 @@ lsof -ti:5173 | xargs kill   # frontend
 ## Project layout
 
 ```
-backend-practise/
-├── pom.xml, mvnw, mvnw.cmd, .mvn/
-├── src/main/java/com/example/movielist/   # backend source, see CLAUDE.md for package map
-├── src/main/resources/application.yml
-├── src/test/java/com/example/movielist/
-├── .env.example
-├── README.md            (this file)
-├── CLAUDE.md             full design doc
-├── FLOW_STARTUP.md      timeline from startup command to home page on screen
-├── DEPENDENCY_INJECTION.md   how Spring wires the app together, plain-language
-└── frontend/              Vite + React + TS
+pom.xml, mvnw, mvnw.cmd, .mvn/
+src/main/java/com/example/movielist/   # backend source, see CLAUDE.md for package map
+src/main/resources/application.yml
+src/test/java/com/example/movielist/
+.env.example
+README.md            (this file)
+CLAUDE.md             full design doc
+FLOW_STARTUP.md      timeline from startup command to home page on screen
+DEPENDENCY_INJECTION.md   how Spring wires the app together, plain-language
+frontend/              Vite + React + TS
 ```
 
 Every backend package (`entity/`, `repository/`, `dto/`, `mapper/`,
