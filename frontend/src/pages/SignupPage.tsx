@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { usePageView } from '../lib/pageView';
 import { ApiError } from '../lib/api';
 
 /** New-account signup form, with per-field validation errors from the backend. */
 export function SignupPage() {
+  usePageView('Signup');
   const { signup } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');

@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { apiRequest, ApiError } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
+import { usePageView } from '../lib/pageView';
 import { MovieCard } from '../components/MovieCard';
 import { FEATURED_IMDB_IDS } from '../lib/featuredMovies';
 import type { FavoriteListResponse, MovieResponse, MovieSearchResultResponse } from '../types';
@@ -16,6 +17,7 @@ function toSearchResult(movie: MovieResponse): MovieSearchResultResponse {
 
 /** Public movie search page; shows the add-to-list control only when signed in. */
 export function SearchPage() {
+  usePageView('Search');
   const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [results, setResults] = useState<MovieSearchResultResponse[]>([]);

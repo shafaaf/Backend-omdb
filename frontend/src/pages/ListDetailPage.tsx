@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { apiRequest, ApiError } from '../lib/api';
+import { usePageView } from '../lib/pageView';
 import type { FavoriteListItemResponse, FavoriteListResponse } from '../types';
 
 /** Shows one favorite list's movies; lets the user remove a movie from it. */
 export function ListDetailPage() {
   const { listId } = useParams<{ listId: string }>();
+  usePageView('List Detail', listId);
   const [list, setList] = useState<FavoriteListResponse | null>(null);
   const [items, setItems] = useState<FavoriteListItemResponse[]>([]);
   const [loading, setLoading] = useState(true);

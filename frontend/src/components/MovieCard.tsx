@@ -12,9 +12,13 @@ interface Props {
 export function MovieCard({ movie, lists }: Props) {
   const { user } = useAuth();
 
+  function handleClick() {
+    console.log(`[movie] user clicked movie: "${movie.title}" (${movie.externalId})`);
+  }
+
   return (
     <div className="movie-card">
-      <Link to={`/movies/${movie.externalId}`} className="movie-card-link">
+      <Link to={`/movies/${movie.externalId}`} className="movie-card-link" onClick={handleClick}>
         {movie.posterUrl ? (
           <img src={movie.posterUrl} alt={movie.title} className="movie-card-poster" />
         ) : (
@@ -23,7 +27,7 @@ export function MovieCard({ movie, lists }: Props) {
       </Link>
       <div className="movie-card-body">
         <h3>
-          <Link to={`/movies/${movie.externalId}`} className="movie-card-title-link">
+          <Link to={`/movies/${movie.externalId}`} className="movie-card-title-link" onClick={handleClick}>
             {movie.title}
           </Link>
         </h3>

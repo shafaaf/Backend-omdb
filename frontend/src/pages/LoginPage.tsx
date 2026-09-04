@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { usePageView } from '../lib/pageView';
 import { ApiError } from '../lib/api';
 
 /** Email/password login form. */
 export function LoginPage() {
+  usePageView('Login');
   const { login } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');

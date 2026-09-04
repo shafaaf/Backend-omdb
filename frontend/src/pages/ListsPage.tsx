@@ -1,10 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { apiRequest, ApiError } from '../lib/api';
+import { usePageView } from '../lib/pageView';
 import { FavoriteListCard } from '../components/FavoriteListCard';
 import type { FavoriteListResponse } from '../types';
 
 /** Create/list/delete the current user's favorite lists. */
 export function ListsPage() {
+  usePageView('Lists');
   const [lists, setLists] = useState<FavoriteListResponse[]>([]);
   const [name, setName] = useState('');
   const [error, setError] = useState('');

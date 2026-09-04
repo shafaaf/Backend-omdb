@@ -21,6 +21,15 @@ interface RequestOptions {
   idempotencyKey?: string;
 }
 
+/** Masks password fields before a request body hits the console — everything else about
+ *  a request is useful to see in activity logs, but credentials never should be. */
+function redactBody(body: unknown): unknown {
+  if (!body || typeof body !== 'object') return body;
+  const clone: Record<string, unknown> = { ...(body as Record<string, unknown>) };
+  if ('password' in clone) clone.password = '[redacted]';
+  return clone;
+}
+
 // Sends one request to the backend with the standard headers/credentials.
 //
 // No token handling here at all — auth cookies are httpOnly, set by the backend
@@ -71,9 +80,9 @@ function refreshAccessToken(): Promise<boolean> {
  */
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const method = options.method ?? 'GET';
-  console.log(`[api] ${method} ${path}`);
+  console.log(`[api] request: ${method} ${path}`, options.body !== undefined ? redactBody(options.body) : '');
   let response = await rawRequest(path, options);
-  console.log(`[api] ${method} ${path} -> ${response.status}`);
+  console.log(`[api] response: ${method} ${path} -> ${response.status}`);
 
   if (response.status === 401 && path !== '/auth/refresh' && path !== '/auth/login') {
     console.log(`[api] ${method} ${path} got 401, attempting token refresh`);
@@ -81,7 +90,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     if (refreshed) {
       console.log(`[api] token refreshed, retrying ${method} ${path}`);
       response = await rawRequest(path, options);
-      console.log(`[api] ${method} ${path} retry -> ${response.status}`);
+      console.log(`[api] response: ${method} ${path} retry -> ${response.status}`);
     } else {
       console.log('[api] token refresh failed');
     }
@@ -89,7 +98,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 
   if (!response.ok) {
     const body: ErrorResponse | null = await response.json().catch(() => null);
-    console.warn(`[api] ${method} ${path} failed with ${response.status}: ${body?.message ?? 'no message'}`);
+    console.warn(`[api] ${method} ${path} failed with ${response.status}: ${body?.message ?? 'no message'}`, body);
     throw new ApiError(
       body?.message ?? `Request failed (${response.status})`,
       response.status,
@@ -98,7 +107,10 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   }
 
   if (response.status === 204) {
+    console.log(`[api] ${method} ${path} -> 204 No Content`);
     return undefined as T;
   }
-  return response.json();
+  const data = await response.json();
+  console.log(`[api] ${method} ${path} response body:`, data);
+  return data;
 }
