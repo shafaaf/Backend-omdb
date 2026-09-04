@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { apiRequest, ApiError } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
+import { usePageView } from '../lib/pageView';
 import { AddToListButton } from '../components/AddToListButton';
 import type { FavoriteListResponse, MovieResponse } from '../types';
 
@@ -12,6 +13,7 @@ import type { FavoriteListResponse, MovieResponse } from '../types';
  */
 export function MovieDetailPage() {
   const { imdbId } = useParams<{ imdbId: string }>();
+  usePageView('Movie Detail', imdbId);
   const { user } = useAuth();
   const [movie, setMovie] = useState<MovieResponse | null>(null);
   const [lists, setLists] = useState<FavoriteListResponse[]>([]);

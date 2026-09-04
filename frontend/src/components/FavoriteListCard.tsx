@@ -8,9 +8,13 @@ interface Props {
 
 /** One list summary row: name (links to detail), item count, delete button. */
 export function FavoriteListCard({ list, onDelete }: Props) {
+  function handleClick() {
+    console.log(`[lists] user clicked list: "${list.name}" (${list.id})`);
+  }
+
   return (
     <div className="list-card">
-      <Link to={`/lists/${list.id}`} className="list-card-name">
+      <Link to={`/lists/${list.id}`} className="list-card-name" onClick={handleClick}>
         {list.name}
       </Link>
       <span className="list-card-count">
