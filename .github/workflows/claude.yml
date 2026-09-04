@@ -35,29 +35,28 @@ jobs:
     # CONDITIONAL: Only run if someone mentions @claude
     # This prevents Claude from running on EVERY comment/issue/review
     # The logic checks if '@claude' appears in the relevant field based on event type
+    #
+    # NOTE: comments must stay OUTSIDE this expression block - GitHub Actions parses
+    # everything under 'if: |' as a single expression, and '#' is not valid inside one.
+    #   Case 1: Issue comment (e.g., "@claude fix this")
+    #   Case 2: PR review comment (e.g., "@claude why did they do this?")
+    #   Case 3: PR review body (e.g., review message that mentions "@claude")
+    #   Case 4: Issue title or body (e.g., "@claude help debug" in title or description)
     if: |
-      # Case 1: Issue comment (e.g., "@claude fix this")
       (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-
-      # Case 2: PR review comment (e.g., "@claude why did they do this?")
       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-
-      # Case 3: PR review body (e.g., review message that mentions "@claude")
       (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-
-      # Case 4: Issue title or body (e.g., "@claude help debug" in title or description)
       (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
-
     # Environment: Run on GitHub-hosted Ubuntu runner
     runs-on: ubuntu-latest
 
     # PERMISSIONS: What this workflow is allowed to do
     permissions:
-      contents: read         # Can read the repo code
-      pull-requests: read    # Can read PR details
-      issues: read           # Can read issue details
-      id-token: write        # Can authenticate with GitHub's token
-      actions: read          # Can read CI/CD workflow results (needed to display test failures, build status)
+      contents: read        # Can read the repo code
+      pull-requests: read   # Can read PR details
+      issues: read          # Can read issue details
+      id-token: write       # Can authenticate with GitHub's token
+      actions: read         # Can read CI/CD workflow results (needed to display test failures, build status)
 
     # STEPS: Sequential tasks
     steps:
@@ -92,8 +91,7 @@ jobs:
 
           # OPTIONAL: Extra CLI arguments for Claude
           # Examples:
-          #   '--allowed-tools Bash(gh pr *)'  = only allow running certain gh commands
+          #   '--allowed-tools Bash(gh pr *)'   = only allow running certain gh commands
           #   '--model claude-opus'             = use a specific Claude model
           # For all options: https://code.claude.com/docs/en/cli-reference
           # claude_args: '--allowed-tools Bash(gh pr *)'
-
