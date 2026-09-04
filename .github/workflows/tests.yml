@@ -1,0 +1,57 @@
+#===============================================================================#
+#              GITHUB ACTIONS WORKFLOW: Independent Test Suite CI              #
+#                                                                               #
+# Triggered on every PR (opened, pushed, reopened). Runs backend and frontend  #
+# tests independently so "tests pass" is a verifiable GitHub status check,     #
+# not just Claude's claim. Works for PRs from Claude OR humans.                #
+#===============================================================================#
+
+name: Tests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  backend-tests:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Run Maven tests
+        run: ./mvnw test --batch-mode --no-transfer-progress
+
+  frontend-tests:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: cd frontend && npm ci
+
+      - name: Run Vitest
+        run: cd frontend && npx vitest run
+
+      - name: Run linting
+        run: cd frontend && npm run lint

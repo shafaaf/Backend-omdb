@@ -1,0 +1,43 @@
+#===============================================================================#
+#           GITHUB ACTIONS WORKFLOW: Manual Merge Gate (Non-LLM)               #
+#                                                                               #
+# Triggered when you comment "@claude merge" on a PR. A plain (non-LLM)       #
+# Actions step merges the PR only if YOU gave the exact command.              #
+# Prevents accidental merges and keeps merge authority human-controlled.      #
+#===============================================================================#
+
+name: Claude Merge
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  merge:
+    # Only trigger if:
+    # 1. Sender is repo owner
+    # 2. Comment is on a PR (not issue)
+    # 3. Comment says "@claude merge"
+    if: |
+      github.event.sender.login == github.repository_owner &&
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, '@claude merge')
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Merge PR
+        run: |
+          gh pr merge ${{ github.event.issue.number }} \
+            --squash \
+            --delete-branch \
+            --auto
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
