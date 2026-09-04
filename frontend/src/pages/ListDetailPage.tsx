@@ -30,10 +30,13 @@ export function ListDetailPage() {
 
   /** Removes one movie from this list, then reloads. */
   async function handleRemove(imdbId: string) {
+    console.log(`[lists] user removing movie ${imdbId} from list ${listId}`);
     try {
       await apiRequest(`/lists/${listId}/movies/${imdbId}`, { method: 'DELETE' });
       await refresh();
+      console.log(`[lists] removed movie ${imdbId} from list ${listId}`);
     } catch {
+      console.warn(`[lists] failed to remove movie ${imdbId} from list ${listId}`);
       setError('Failed to remove movie');
     }
   }

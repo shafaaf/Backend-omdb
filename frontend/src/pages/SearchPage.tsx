@@ -60,12 +60,15 @@ export function SearchPage() {
     setLoading(true);
     setError('');
     setSearched(true);
+    console.log(`[search] user searched for: "${title}"`);
     try {
       const found = await apiRequest<MovieSearchResultResponse[]>(
         `/movies/search?title=${encodeURIComponent(title)}`,
       );
       setResults(found);
+      console.log(`[search] "${title}" returned ${found.length} result(s)`);
     } catch (err) {
+      console.warn(`[search] "${title}" failed`);
       setError(err instanceof ApiError ? err.message : 'Search failed');
     } finally {
       setLoading(false);
