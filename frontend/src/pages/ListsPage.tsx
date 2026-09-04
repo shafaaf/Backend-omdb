@@ -24,20 +24,26 @@ export function ListsPage() {
     e.preventDefault();
     if (!name.trim()) return;
     setError('');
+    console.log(`[lists] user creating list: "${name}"`);
     try {
       await apiRequest('/lists', { method: 'POST', body: { name } });
+      console.log(`[lists] created list: "${name}"`);
       setName('');
       await refresh();
     } catch (err) {
+      console.warn(`[lists] failed to create list: "${name}"`);
       setError(err instanceof ApiError ? err.message : 'Failed to create list');
     }
   }
 
   async function handleDelete(id: number) {
+    console.log(`[lists] user deleting list ${id}`);
     try {
       await apiRequest(`/lists/${id}`, { method: 'DELETE' });
+      console.log(`[lists] deleted list ${id}`);
       await refresh();
     } catch {
+      console.warn(`[lists] failed to delete list ${id}`);
       setError('Failed to delete list');
     }
   }

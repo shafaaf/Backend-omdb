@@ -29,6 +29,7 @@ export function AddToListButton({ imdbId, lists }: Props) {
 
     setStatus('saving');
     setErrorMessage('');
+    console.log(`[lists] user adding movie ${imdbId} to list ${selectedListId}`);
     try {
       await apiRequest<FavoriteListItemResponse>(`/lists/${selectedListId}/movies`, {
         method: 'POST',
@@ -37,9 +38,11 @@ export function AddToListButton({ imdbId, lists }: Props) {
       });
       setStatus('done');
       idempotencyKeyRef.current = null;
+      console.log(`[lists] added movie ${imdbId} to list ${selectedListId}`);
     } catch (err) {
       setStatus('error');
       setErrorMessage(err instanceof ApiError ? err.message : 'Failed to add movie');
+      console.warn(`[lists] failed to add movie ${imdbId} to list ${selectedListId}`);
     }
   }
 

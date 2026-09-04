@@ -26,27 +26,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /** Logs the user in and updates the current user state on success. */
   async function login(email: string, password: string) {
-    const result = await apiRequest<AuthResponse>('/auth/login', {
-      method: 'POST',
-      body: { email, password },
-    });
-    setUser(result.user);
+    console.log(`[auth] user attempting to log in: ${email}`);
+    try {
+      const result = await apiRequest<AuthResponse>('/auth/login', {
+        method: 'POST',
+        body: { email, password },
+      });
+      setUser(result.user);
+      console.log(`[auth] login succeeded for: ${email}`);
+    } catch (err) {
+      console.warn(`[auth] login failed for: ${email}`);
+      throw err;
+    }
   }
 
   /** Creates a new account and updates the current user state on success. */
   async function signup(email: string, password: string, displayName: string) {
-    const result = await apiRequest<AuthResponse>('/auth/signup', {
-      method: 'POST',
-      body: { email, password, displayName },
-    });
-    setUser(result.user);
+    console.log(`[auth] user attempting to sign up: ${email}`);
+    try {
+      const result = await apiRequest<AuthResponse>('/auth/signup', {
+        method: 'POST',
+        body: { email, password, displayName },
+      });
+      setUser(result.user);
+      console.log(`[auth] signup succeeded for: ${email}`);
+    } catch (err) {
+      console.warn(`[auth] signup failed for: ${email}`);
+      throw err;
+    }
   }
 
   async function logout() {
+    console.log('[auth] user logging out');
     // Best-effort: even if the network call fails, clear local state so the UI
     // reflects "logged out" immediately rather than getting stuck.
-    await apiRequest('/auth/logout', { method: 'POST' }).catch(() => {});
+    await apiRequest('/auth/logout', { method: 'POST' }).catch(() => {
+      console.warn('[auth] logout request failed, clearing local state anyway');
+    });
     setUser(null);
+    console.log('[auth] user logged out');
   }
 
   return (

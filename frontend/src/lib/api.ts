@@ -70,17 +70,26 @@ function refreshAccessToken(): Promise<boolean> {
  * (AuthContext, page components) can react to.
  */
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const method = options.method ?? 'GET';
+  console.log(`[api] ${method} ${path}`);
   let response = await rawRequest(path, options);
+  console.log(`[api] ${method} ${path} -> ${response.status}`);
 
   if (response.status === 401 && path !== '/auth/refresh' && path !== '/auth/login') {
+    console.log(`[api] ${method} ${path} got 401, attempting token refresh`);
     const refreshed = await refreshAccessToken();
     if (refreshed) {
+      console.log(`[api] token refreshed, retrying ${method} ${path}`);
       response = await rawRequest(path, options);
+      console.log(`[api] ${method} ${path} retry -> ${response.status}`);
+    } else {
+      console.log('[api] token refresh failed');
     }
   }
 
   if (!response.ok) {
     const body: ErrorResponse | null = await response.json().catch(() => null);
+    console.warn(`[api] ${method} ${path} failed with ${response.status}: ${body?.message ?? 'no message'}`);
     throw new ApiError(
       body?.message ?? `Request failed (${response.status})`,
       response.status,
