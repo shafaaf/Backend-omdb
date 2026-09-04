@@ -21,32 +21,32 @@ on:
   pull_request_review_comment:
     types: [created]  # When a new comment is posted on a PR review
 
-  # Trigger 3: Issue creation or assignment
-  issues:
-    types: [opened, assigned]  # When issue is opened OR assigned to someone
-
-  # Trigger 4: PR review submission
+  # Trigger 3: PR review submission
   pull_request_review:
     types: [submitted]  # When someone submits a PR review
+
+  # NOTE: New issues with @claude are handled by claude-plan.yml (planning stage)
+  # This workflow only handles follow-up comments/reviews, not new issue creation
 
 # JOBS: The actual work
 jobs:
   claude:
     # CONDITIONAL: Only run if someone mentions @claude
-    # This prevents Claude from running on EVERY comment/issue/review
+    # This prevents Claude from running on EVERY comment/review
     # The logic checks if '@claude' appears in the relevant field based on event type
+    #
+    # NOTE: New issues with @claude are NOT handled here — claude-plan.yml takes those.
+    # This workflow only handles follow-up comments on existing issues/PRs + PR reviews.
     #
     # NOTE: comments must stay OUTSIDE this expression block - GitHub Actions parses
     # everything under 'if: |' as a single expression, and '#' is not valid inside one.
     #   Case 1: Issue comment (e.g., "@claude fix this")
     #   Case 2: PR review comment (e.g., "@claude why did they do this?")
     #   Case 3: PR review body (e.g., review message that mentions "@claude")
-    #   Case 4: Issue title or body (e.g., "@claude help debug" in title or description)
     if: |
       (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude'))
     # Environment: Run on GitHub-hosted Ubuntu runner
     runs-on: ubuntu-latest
 
