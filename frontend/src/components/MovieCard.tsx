@@ -19,11 +19,14 @@ export function MovieCard({ movie, lists }: Props) {
   return (
     <div className="movie-card">
       <Link to={`/movies/${movie.externalId}`} className="movie-card-link" onClick={handleClick}>
-        {movie.posterUrl ? (
-          <img src={movie.posterUrl} alt={movie.title} className="movie-card-poster" />
-        ) : (
-          <div className="movie-card-poster movie-card-poster-placeholder">No image</div>
-        )}
+        <div className="movie-card-poster-wrap">
+          {movie.posterUrl ? (
+            <img src={movie.posterUrl} alt={movie.title} className="movie-card-poster" />
+          ) : (
+            <div className="movie-card-poster movie-card-poster-placeholder">No image</div>
+          )}
+          {movie.imdbRating && <span className="movie-card-rating">★ {movie.imdbRating}</span>}
+        </div>
       </Link>
       <div className="movie-card-body">
         <h3>

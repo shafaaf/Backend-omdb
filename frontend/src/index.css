@@ -198,11 +198,30 @@ select {
   display: block;
 }
 
+.movie-card-poster-wrap {
+  position: relative;
+}
+
 .movie-card-poster {
   width: 100%;
   aspect-ratio: 2 / 3;
   object-fit: cover;
   background: var(--border);
+}
+
+.movie-card-rating {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  background: #f5c518;
+  color: #000;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
 }
 
 .movie-card-title-link {

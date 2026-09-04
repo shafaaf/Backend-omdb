@@ -37,6 +37,11 @@ export interface MovieSearchResultResponse {
   title: string;
   releaseYear: number | null;
   posterUrl: string | null;
+  // Not part of the backend's MovieSearchResultResponse — OMDb's `s=` search
+  // endpoint doesn't return ratings at all (see OmdbSearchItem). Only present
+  // when this object was built from a full MovieResponse (e.g. featured movies
+  // on SearchPage, which fetch each title's full detail via GET /movies/{id}).
+  imdbRating?: string | null;
 }
 
 export interface FavoriteListItemResponse {

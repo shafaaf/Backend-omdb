@@ -165,4 +165,38 @@ describe('MovieCard', () => {
       expect(yearElement).not.toBeInTheDocument();
     });
   });
+
+  it('should display the IMDb rating when present', async () => {
+    mockApiRequest.mockResolvedValueOnce(null);
+
+    const movieWithRating = { ...mockMovie, imdbRating: '9.3' };
+
+    render(
+      <BrowserRouter>
+        <AuthProvider>
+          <MovieCard movie={movieWithRating} lists={mockLists} />
+        </AuthProvider>
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('★ 9.3')).toBeInTheDocument();
+    });
+  });
+
+  it('should not display a rating badge when imdbRating is absent', async () => {
+    mockApiRequest.mockResolvedValueOnce(null);
+
+    const { container } = render(
+      <BrowserRouter>
+        <AuthProvider>
+          <MovieCard movie={mockMovie} lists={mockLists} />
+        </AuthProvider>
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(container.querySelector('.movie-card-rating')).not.toBeInTheDocument();
+    });
+  });
 });
