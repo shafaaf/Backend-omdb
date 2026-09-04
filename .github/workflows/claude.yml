@@ -90,8 +90,5 @@ jobs:
           # prompt: 'Update the pull request description to include a summary of changes.'
 
           # OPTIONAL: Extra CLI arguments for Claude
-          # Examples:
-          #   '--allowed-tools Bash(gh pr *)'   = only allow running certain gh commands
-          #   '--model claude-opus'             = use a specific Claude model
-          # For all options: https://code.claude.com/docs/en/cli-reference
-          # claude_args: '--allowed-tools Bash(gh pr *)'
+          # Grant Claude permission to run npm commands for verification
+          claude_args: '--allowedTools "Bash(npm run lint)" --allowedTools "Bash(npx vitest run)" --allowedTools "Read" --allowedTools "Bash(git *)"'
