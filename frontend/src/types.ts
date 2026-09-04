@@ -37,6 +37,9 @@ export interface MovieSearchResultResponse {
   title: string;
   releaseYear: number | null;
   posterUrl: string | null;
+  // Only present when this movie is already cached locally — OMDb's search
+  // endpoint doesn't return ratings, only its per-title detail endpoint does.
+  imdbRating: string | null;
 }
 
 export interface FavoriteListItemResponse {

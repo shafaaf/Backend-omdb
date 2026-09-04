@@ -12,6 +12,7 @@ function toSearchResult(movie: MovieResponse): MovieSearchResultResponse {
     title: movie.title,
     releaseYear: movie.releaseYear,
     posterUrl: movie.posterUrl,
+    imdbRating: movie.imdbRating,
   };
 }
 

@@ -2,6 +2,7 @@ package com.example.movielist.service.impl;
 
 import com.example.movielist.client.OmdbClient;
 import com.example.movielist.client.OmdbMovieResponse;
+import com.example.movielist.client.OmdbSearchItem;
 import com.example.movielist.dto.response.MovieResponse;
 import com.example.movielist.dto.response.MovieSearchResultResponse;
 import com.example.movielist.entity.Movie;
@@ -10,6 +11,8 @@ import com.example.movielist.mapper.MovieMapper;
 import com.example.movielist.repository.MovieRepository;
 import com.example.movielist.service.MovieService;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -36,8 +39,19 @@ public class MovieServiceImpl implements MovieService {
 	@Override
 	@Transactional(readOnly = true)
 	public List<MovieSearchResultResponse> search(String title) {
-		return omdbClient.search(title).stream()
-				.map(MovieMapper::toSearchResult)
+		List<OmdbSearchItem> items = omdbClient.search(title);
+
+		// OMDb's search endpoint doesn't return ratings at all, so we backfill them
+		// from whatever's already cached locally (one batch lookup, not N). Movies
+		// nobody has viewed/added yet simply have no rating in the results — this is
+		// expected, not a bug (see MovieSearchResultResponse's javadoc).
+		Map<String, String> cachedRatingsByExternalId = movieRepository
+				.findByExternalIdIn(items.stream().map(OmdbSearchItem::imdbId).toList())
+				.stream()
+				.collect(Collectors.toMap(Movie::getExternalId, Movie::getImdbRating));
+
+		return items.stream()
+				.map(item -> MovieMapper.toSearchResult(item, cachedRatingsByExternalId.get(item.imdbId())))
 				.toList();
 	}
 

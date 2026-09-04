@@ -8,7 +8,7 @@ interface Props {
   lists: FavoriteListResponse[];
 }
 
-/** One search-result card: poster, title, year, and the add-to-list control (or a login hint). */
+/** One search-result card: poster, title, year, IMDb rating (if available), and the add-to-list control (or a login hint). */
 export function MovieCard({ movie, lists }: Props) {
   const { user } = useAuth();
 
@@ -31,7 +31,14 @@ export function MovieCard({ movie, lists }: Props) {
             {movie.title}
           </Link>
         </h3>
-        {movie.releaseYear && <p className="movie-card-year">{movie.releaseYear}</p>}
+        <div className="movie-card-meta">
+          {movie.releaseYear && <span className="movie-card-year">{movie.releaseYear}</span>}
+          {movie.imdbRating && (
+            <span className="movie-card-rating" title="IMDb rating">
+              ★ {movie.imdbRating}
+            </span>
+          )}
+        </div>
         {user ? (
           <AddToListButton imdbId={movie.externalId} lists={lists} />
         ) : (
