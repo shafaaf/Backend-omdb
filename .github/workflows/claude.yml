@@ -33,20 +33,29 @@ jobs:
   claude:
     # CONDITIONAL: Only run if someone mentions @claude
     # This prevents Claude from running on EVERY comment/review
-    # The logic checks if '@claude' appears in the relevant field based on event type
-    #
-    # NOTE: New issues with @claude are NOT handled here — claude-plan.yml takes those.
-    # This workflow only handles follow-up comments on existing issues/PRs + PR reviews.
+    # Also prevents overlap with specialized workflows (plan/implement/merge)
     #
     # NOTE: comments must stay OUTSIDE this expression block - GitHub Actions parses
     # everything under 'if: |' as a single expression, and '#' is not valid inside one.
-    #   Case 1: Issue comment (e.g., "@claude fix this")
-    #   Case 2: PR review comment (e.g., "@claude why did they do this?")
-    #   Case 3: PR review body (e.g., review message that mentions "@claude")
+    #
+    # EXCLUSIONS (handled by other workflows):
+    #   - New issues with @claude → claude-plan.yml (planning stage)
+    #   - "@claude implement" on issues → claude-implement.yml (implementation stage)
+    #   - "@claude merge" on PRs → claude-merge.yml (merge stage)
+    #
+    # INCLUSIONS (handled by this workflow):
+    #   - Issue comments with @claude (but not "@claude implement")
+    #   - PR review comments with @claude
+    #   - PR review body with @claude (but not "@claude merge")
     if: |
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude'))
+      (github.event_name == 'issue_comment' &&
+       contains(github.event.comment.body, '@claude') &&
+       !contains(github.event.comment.body, '@claude implement')) ||
+      (github.event_name == 'pull_request_review_comment' &&
+       contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review' &&
+       contains(github.event.review.body, '@claude') &&
+       !contains(github.event.review.body, '@claude merge'))
     # Environment: Run on GitHub-hosted Ubuntu runner
     runs-on: ubuntu-latest
 
